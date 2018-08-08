@@ -1,0 +1,60 @@
+#include "../../libctf/ctf.h"
+#include "stdio.h"
+#include "string.h"
+#include "time.h"
+
+unsigned int key[5] = {0x2a2a2a2a, 0x2a2a2a2a, 0x2a2a2a2a, 0x2a2a2a2a, 0x00000000};
+unsigned int password[5] = {0,0,0,0,0};
+
+void dec(unsigned int x)
+{
+  unsigned int i;
+  unsigned char * ckey = (char*)&key;
+  for(i=0; i < 4; i++)
+  {
+    key[i] ^= password[i];
+    key[i] ^= x;
+  }
+  if (ckey[0] == '*' && ckey[1] == '*' && ckey[2] == '*' && ckey[3] == '*' && ckey[4] == '*') 
+    printf("{key:%s}\n", (char*)key);
+  exit(0);
+}
+
+void enc(void)
+{
+  unsigned int i;
+  unsigned int x = 0x41414141;
+  srand(time(NULL));
+  password[0] = rand();
+  password[1] = rand();
+  password[2] = rand();
+  password[3] = rand();
+  for(i=0; i < 4; i++)
+  {
+    key[i] ^= x;
+    key[i] ^= password[i];
+  }
+  return;
+}
+
+// This challenge, check's if edi == 0x41414141
+// you must also overflow saved RIP
+// and you must ROP! 
+
+// basically 
+  //mov edi, 0x41414141, 
+  //ret
+  //16 bytes padding
+  //stack address (leaked by this program)
+  //dec address
+// which means you must put more than one address on the stack!
+
+int main(void)
+{
+	char buf[8];
+  enc();
+	setvbuf(stdout, NULL, _IONBF, 0);
+	ctf_writef(fileno(stdout), "%p\n", (void *)&buf);
+	ctf_readsn(fileno(stdin), (char*)&buf, 0x28);
+	return 0;
+}

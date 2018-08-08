@@ -1,0 +1,45 @@
+#include "../../libctf/ctf.h"
+#include "stdio.h"
+
+#define CANARY 0x11223344
+
+void callme(void)
+{
+  __asm__ __volatile__ 
+  ( 
+    "test %%ebx, %%ebx\n\t"		// check if EBX is 0
+    "jz key\n\t"				// if 0, go to key
+    "ret\n\t"					// otherwise return
+    "key:\n\t"
+    :
+    : 
+    : "eax"
+  );
+  printf("{key:****************}\n");
+  exit(0);
+}
+
+// This challenge, check's if ebx == 0x0
+// you only get 2 bytes of execution!
+int main(void)
+{
+  char buf[5];
+  unsigned long long caddr = 0x000000000400f9d;
+  buf[2] = 0xff; // jmp [rbp-0x8]
+  buf[3] = 0x65;
+  buf[4] = 0xe8;
+
+  setvbuf(stdout, NULL, _IONBF, 0);
+  if ((ctf_readsn(fileno(stdin), (char *)&buf, 2)))
+  {
+    __asm__ __volatile__
+    (
+      "movl %[canary], %%ebx\n\t"	// Set a canary value
+      :
+      : [canary] "i" (CANARY)	
+      : "ebx"
+    );
+    ((void (*)())buf)();
+  }
+  return 0;
+}

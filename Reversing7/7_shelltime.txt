@@ -1,0 +1,11 @@
+#include "../../libctf/ctf.h"
+#include "stdio.h"
+
+int main(void)
+{
+	char buf[256];
+	setvbuf(stdout, NULL, _IONBF, 0);
+	ctf_writef(fileno(stdout), "%p\n", &buf);
+	ctf_readsn(fileno(stdin), buf, 272);
+	return 0;
+}

@@ -1,0 +1,24 @@
+Here is sample python subprocess code to help you debug local runs
+
+
+#!/usr/bin/python
+import subprocess 
+binary = "\x11\x22\x33\x44"
+binary += "\x55\x66\x77\x88"
+
+p = subprocess.Popen(["/path/to/bin"], stdin=subprocess.PIPE, stdout.subprocess.PIPE, bufsize=0)
+
+# neat little trick, this lets you pause execution until you press enter...
+# you could use this to, for example, take a moment to attach gdb to the newly
+# launched copy of /path/to/bin before throwing your exploit... ;]
+raw_input() 
+
+
+# read output 
+output = p.stdout.readline()
+print output 
+
+# write to stdin
+while True:
+  p.stdin.write(raw_input() + "\n")
+  print p.stdout.readline()
